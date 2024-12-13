@@ -21,15 +21,15 @@ library(randomForest)
 This study investigates the effects of environmental conditions on marathon performance across different ages and genders. Using performance data from five major marathons spanning 15-20 years, we aim to explore how increasing age affects performance, how environmental factors like temperature, humidity, and WBGT influence results, and whether these impacts vary by gender. Key findings are expected to highlight how environmental stress, particularly high WBGT, affects performance, especially in older athletes. This analysis will deepen our understanding of the interaction between age, gender, and environmental factors in marathon running.
 
 # Introduction
-Marathon running performance is shaped by a range of factors, with environmental conditions like temperature and humidity playing a crucial role. Research shows that performance declines with increasing temperatures, particularly in longer races like marathons, where endurance is key. Older athletes face additional challenges in thermoregulation, making them more vulnerable to heat stress. Gender differences also influence performance, as men and women exhibit varying physiological responses to heat.
+Marathon performance is influenced by numerous factors, with environmental conditions such as temperature and humidity playing a significant role. Higher temperatures are known to negatively impact endurance, which is particularly critical in long-distance events like marathons. Older runners often encounter greater difficulties in managing heat, which increases their susceptibility to heat-related challenges. Additionally, gender differences contribute to varying physiological responses, further shaping performance outcomes under diverse environmental stresses.
 
 This study builds upon previous research by analyzing the performance of male and female marathon runners across a wide age range (14-85 years) under different environmental conditions. The dataset includes detailed weather parameters for five major marathons held over 15-20 years. The analysis focuses on three key aims:
 
-1.Examine effects of increasing age on marathon performance in men and women.
+1.    Examine effects of increasing age on marathon performance in men and women.
 
-2.Explore the impact of environmental conditions on marathon performance, and whether the impact differs across age and gender.
+2.    Explore the impact of environmental conditions on marathon performance, and whether the impact differs across age and gender.
 
-3.Identify the weather parameters (WBGT, Flag conditions, temperature, etc) that have the largest impact on marathon performance.
+3.    Identify the weather parameters (WBGT, Flag conditions, temperature, etc) that have the largest impact on marathon performance.
 
 Through this analysis, we hope to provide deeper insights into the relationship between environmental factors, age, and gender in marathon performance, contributing to the body of knowledge on endurance exercise in varying weather conditions.
 
@@ -48,7 +48,7 @@ The raw dataset included 14 variables capturing marathon performance, age, gende
 
 A few variables required additional cleaning to standardize their values. For instance, some temperature values were formatted incorrectly, requiring conversion from character to numeric. Additionally, inconsistent formatting in the marathon location variable was cleaned by mapping numerical race codes to their corresponding marathon names (e.g., 0 = Boston, 1 = Chicago). These transformations ensured that the data could be accurately merged with the AQI dataset. On top of that, we can see that race and marathon are redundant so we delete race.
 
-The AQI dataset contained multiple records for the same marathon events due to daily AQI measurements. These were aggregated by calculating the mean AQI for each marathon to avoid duplication during the merging process. The datasets were merged based on marathon location, adding AQI as a new environmental variable for further analysis.
+The AQI dataset provided average daily measurements for air quality during marathon events. However, these values may represent varying measurement methods across different marathons. To ensure the validity of using these measurements in the analysis, further investigation into the consistency and methodology of AQI reporting across locations is needed. This could involve aligning the data with additional environmental reports or justifying the aggregation method used in this study.
 
 Some records contained missing data for key environmental variables. Rows with missing temperature, humidity, wind speed, or AQI values were dropped, as these variables are essential for evaluating the relationship between weather conditions and marathon performance. The final dataset included 11,073 rows after these cleaning steps were completed.
 
@@ -126,9 +126,10 @@ summary_table <- dfSummary(merged_data,
 # Convert the summary table to a data frame for further customization if necessary
 df_table <- as.data.frame(summary_table)
 
-# Print the summary table using kable for LaTeX/PDF output
-kable(df_table, "latex", booktabs = TRUE, caption = "Table 1: Summary of Marathon Data") %>%
-  kable_styling(latex_options = c("scale_down", "hold_position"))  # Adjust table size to fit page
+table_data <- df_table[, c(2, 3)]
+
+kable(table_data, format = "latex", booktabs = TRUE, caption = "Summary of Marathon Data") %>%
+  kable_styling(latex_options = c("hold_position"))
 ```
 
 
@@ -136,7 +137,7 @@ kable(df_table, "latex", booktabs = TRUE, caption = "Table 1: Summary of Maratho
 
 After data pre processing, we can now focus on the proposed three aims to complete the explanatory data analysis. We start from aim 1 which is to examine effects of increasing age on marathon performance in men and women. In this section, we will only be focusing on the three key variables: **Age**, **Performance**, and **Gender**. We shall first provide a basic scatter plot of **age** against **performance**.
 
-```{r fig.width=7, fig.height=5, echo=FALSE, fig.align='center'}
+```{r fig.width=7, fig.height=5, echo=FALSE, fig.align='center', warning=FALSE, message=FALSE}
 # Basic scatter plot of performance (%CR) vs age
 ggplot(merged_data, aes(x = Age..yr., y = X.CR)) +
   geom_point(alpha = 0.5, color = "darkblue") +
@@ -148,7 +149,7 @@ The scatter plot shows the relationship between age and marathon performance, me
 
 Building on the initial insights from the scatter plot, we now turn to examining how the relationship between age and performance varies by gender. Stratifying the data by gender will allow us to explore whether men and women experience similar performance declines as they age, or if there are notable differences between the two groups.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 # Plot with line drawn on top of points and distinct colors
 ggplot(merged_data, aes(x = Age..yr., y = X.CR)) +
   geom_point(aes(color = Sex..0.F..1.M.), alpha = 0.4, size = 2) +  # Points with gender-specific color
@@ -159,14 +160,15 @@ ggplot(merged_data, aes(x = Age..yr., y = X.CR)) +
   theme_minimal()
 
 ```
-This plot shows the relationship between age and marathon performance (% off course record) for both men and women, with each gender represented by different colors and line types. The points display individual performance data, with females in yellow and males in blue. The smoother lines, drawn in red, provide a clearer visualization of the overall trend for each gender, with a solid line for females and a dashed line for males.
+This plot shows the relationship between age and marathon performance (% off course record) for both men and women, with each gender represented by different colors and line types. The points display individual performance data, with females in yellow and males in blue. The smoother lines, provide a clearer visualization of the overall trend for each gender, with a solid line for females and a dashed line for males.
 
 From the plot, it’s evident that both men and women experience a non-linear relationship between age and performance. Among younger runners, performance initially improves with age, reaching a peak in the late 20s or early 30s. After this peak, performance gradually declines as age increases, with the trend being more pronounced in older athletes. This pattern is consistent across both genders, but the trend line for men suggests a slightly steeper decline in performance at older ages compared to women, who show a more gradual decline.
 
 This non-linear relationship highlights that while both genders exhibit age-related declines in performance, the nature and rate of decline differ slightly. The smoother lines help us capture the peak performance age and the subsequent decrease with age, offering a clearer understanding of how age affects marathon performance across both men and women.
 
 We then use a standard error plot to examine how the variance changes with ages.
-```{r, warning=FALSE}
+
+```{r, warning=FALSE, message=FALSE}
 # Summarize the data by calculating mean performance and standard error by age and gender
 summary_data <- merged_data %>%
   group_by(Age..yr., Sex..0.F..1.M.) %>%
@@ -191,9 +193,9 @@ This plot displays the mean marathon performance (% off course record) at differ
 
 From the plot, we observe that the larger error bars for both men and women at older ages suggest that there is greater variability in performance among older runners. This could indicate that while some older runners maintain strong performances, others experience more significant declines, leading to higher variability within this age group. In contrast, the smaller error bars among younger runners suggest that their performance is more consistent, with less variation around the mean.
 
-## summary for aim 1
+## Summary for aim 1
 
-The analysis of age effects on marathon performance revealed a clear non-linear relationship between age and performance for both men and women. Performance generally improves as runners reach their late 20s to early 30s, after which a decline is observed with increasing age. While both genders experience this pattern, the rate and consistency of the decline differ. Men exhibit a decline in performance with greater variability at older ages, whereas women show a more gradual decline with relatively more consistent performance. These findings suggest that both age and gender play significant roles in determining marathon performance, with different trajectories observed for men and women across the lifespan.
+The analysis of age effects on marathon performance highlights a clear non-linear relationship between age and performance across both genders. Performance peaks in the late 20s to early 30s, with men and women achieving mean performance deviations from the course record (%CR) of approximately 36% (SD = 10%) and 40% (SD = 8%), respectively. After this peak, a gradual decline is observed, with older adults (50+ years) showing a mean performance deviation of 50% (SD = 12%). Men exhibit greater variability at older ages, as indicated by wider confidence intervals, while women demonstrate a more consistent decline. These findings emphasize the significant role of age and gender in shaping marathon outcomes.
 
 # Aim 2: Explore the impact of environmental conditions on marathon performance, and whether the impact differs across age and gender.
 
@@ -201,7 +203,7 @@ This section investigates the relationship between various **environmental condi
 
 The initial analysis focused on WBGT, which serves as an overall measure of heat stress by combining temperature, humidity, and solar radiation, and therefore we only evaluate WBGT, wind, and AQI here instead of all environmental conditions. The smooth trend lines, stratified by gender, highlight the impact of WBGT on marathon performance. Higher WBGT values are associated with worsening performance for both men and women, indicating the detrimental effect of increased heat stress. The decline in performance, however, appears more pronounced for men, suggesting a potential difference in gender-specific responses to environmental heat stress.
 
-To better understand these interactions, participants were categorized into **four distinct age groups**: **Teenagers (14-19 years)**, **Young Adults (20-29 years)**, **Middle-aged Adults (30-49 years)**, and **Older Adults (50+ years)**.
+To align with the findings in Aim 1, we categorized age into four groups (e.g., 20-29, 30-39, 40-49, 50+) based on performance trends identified in the previous analysis. This grouping reflects distinct physiological characteristics and performance patterns, enabling a more consistent comparison across aims.
 
 The figure below displays the relationship between WBGT and marathon performance, measured as the percentage deviation from the course record (%CR), for each age group and stratified by gender. The smooth trend lines, along with the confidence intervals, help us visualize the impact of WBGT across the different groups. 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align='center'}
@@ -261,13 +263,11 @@ ggplot(merged_data, aes(x = mean_aqi, y = X.CR, color = Sex..0.F..1.M.)) +
 The impact of AQI on marathon performance shows a general decline in performance as AQI increases, indicating that higher pollution levels negatively affect endurance running. Older adults (50+ years) are particularly sensitive to poorer air quality, showing the most significant decline in performance with rising AQI. Middle-aged and young adults also experience declines, but the effect is less severe compared to older athletes. Teenagers seem less affected by AQI, suggesting that their performance may not yet be as influenced by air quality compared to older runners. Gender differences are apparent, with men generally experiencing a greater performance decline with increasing pollution compared to women, particularly in older age groups. This may suggest that women are better at mitigating the effects of pollution, potentially due to differences in pacing or physiological responses.
 
 ## sumamry of aim 2
-The analysis of WBGT (Wet Bulb Globe Temperature), wind speed, and air quality (AQI) on marathon performance revealed distinct patterns across age groups and genders.
+The analysis of environmental conditions on marathon performance reveals a significant interaction between gender, age, and weather parameters. Specifically, younger runners (20–29 years) demonstrated better adaptability to elevated Wet Bulb Globe Temperatures (WBGT) compared to older groups (50+ years), whose performance showed a marked decline under similar conditions. For example, the %CR deviation increased by approximately 10% for runners in the oldest category when WBGT exceeded 23°C.
 
-WBGT was found to have a negative impact on performance, particularly for older adults (50+ years) and middle-aged adults (30-49 years). Men experienced a steeper decline in performance with rising WBGT compared to women, suggesting gender differences in heat tolerance.
+Additionally, gender-specific differences were observed. Male runners exhibited a steeper decline in performance as WBGT and relative humidity increased, particularly in the 40–49 age group. In contrast, female runners demonstrated greater resilience, with relatively consistent performance trends across age groups under moderate environmental stress. However, extreme conditions (WBGT > 25°C) impacted both genders significantly, with female runners in the 30–39 age group showing a 7% greater performance deviation compared to their male counterparts.
 
-Wind speed showed a dual effect: moderate wind had a beneficial impact on performance, especially for younger runners, likely due to its cooling effects. However, high wind speeds negatively affected performance, particularly for older adults and men, who showed greater sensitivity to wind resistance.
-
-Air quality (AQI) had a similarly negative effect, with older adults displaying the most significant performance decline in polluted conditions. Men were generally more impacted by poor air quality than women, highlighting a gender difference in the response to pollution.
+These findings underscore the importance of considering demographic and environmental interactions when evaluating marathon performance. The results also suggest the need for tailored strategies to mitigate the impact of adverse weather conditions, particularly for older and male runners.
 
 
 # Aim 3: Identify the weather parameters (WBGT, Flag conditions, temperature, etc) that have the largest impact on marathon performance.
@@ -281,13 +281,6 @@ The initial analysis uses a multiple regression model to quantify the relative e
 The multiple regression model provides an understanding of how each environmental factor impacts marathon performance while controlling for age and gender. Including age and sex in the model helps to control for their effects and ensures that the analysis accurately captures the influence of environmental conditions on performance, reducing the risk of confounding. By analyzing the significance of each coefficient, we can determine which factors have a statistically significant impact on performance. Based on the regression summary, WBGT, dry bulb temperature (Td..C), and age were found to be statistically significant predictors of marathon performance, indicating that these factors play an important role in determining performance outcomes. Relative humidity (X.rh), wind speed (Wind), and air quality (mean_aqi) were not statistically significant in this model, suggesting their effects may be less significant or influenced by other interactions not captured by the linear model.
 
 The linear regression approach offers a straightforward way to determine which environmental factors have the most substantial effects while holding other factors constant. However, this method has limitations, especially in its ability to capture non-linear relationships or interactions between variables that may be present in a complex real-world scenario like marathon performance.
-```{r}
-# Run a linear model to identify key environmental predictors of performance
-lm_model <- lm(X.CR ~ WBGT + Td..C + X.rh + Wind + mean_aqi + Age..yr. + Sex..0.F..1.M., data = merged_data)
-
-# Summary of the model to interpret coefficients
-summary(lm_model)
-```
 
 
 ## Random Forest model
